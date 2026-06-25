@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CogniShift — Settings</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f9fafb;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding: 60px 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+
+    .logo-row img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+    }
+
+    .logo-row h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #111827;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+
+    input[type="password"],
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 14px;
+      color: #111827;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    input:focus {
+      border-color: #3b82f6;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #6b7280;
+      margin-top: 6px;
+    }
+
+    .hint a {
+      color: #3b82f6;
+      text-decoration: none;
+    }
+
+    .show-toggle {
+      font-size: 12px;
+      color: #3b82f6;
+      cursor: pointer;
+      margin-top: 6px;
+      display: inline-block;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: #3b82f6;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 24px;
+      transition: background 0.2s;
+    }
+
+    .btn:hover { background: #2563eb; }
+
+    .status {
+      margin-top: 14px;
+      font-size: 13px;
+      text-align: center;
+      min-height: 20px;
+      font-weight: 500;
+    }
+
+    .status.success { color: #16a34a; }
+    .status.error   { color: #dc2626; }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #e5e7eb;
+      margin: 28px 0;
+    }
+
+    .danger-btn {
+      width: 100%;
+      padding: 10px;
+      background: white;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .danger-btn:hover { background: #fef2f2; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-row">
+      <img src="logo.png" alt="CogniShift" />
+      <h1>CogniShift Settings</h1>
+    </div>
+
+    <label for="api-key">Gemini API Key</label>
+    <input type="password" id="api-key" placeholder="AIza..." autocomplete="off" />
+    <span class="show-toggle" id="show-toggle">Show key</span>
+    <p class="hint">
+      Get your free key at
+      <a href="https://aistudio.google.com/app/apikey" target="_blank">aistudio.google.com</a>.
+      Your key is stored locally on your device and never sent anywhere except Google's API.
+    </p>
+
+    <button class="btn" id="save-btn">Save API Key</button>
+    <div class="status" id="status"></div>
+
+    <hr class="divider" />
+
+    <button class="danger-btn" id="clear-btn">Remove saved key</button>
+  </div>
+
+  <script>
+    const input = document.getElementById('api-key');
+    const toggle = document.getElementById('show-toggle');
+    const status = document.getElementById('status');
+
+    // Load existing key
+    chrome.storage.local.get(['gemini_api_key'], (result) => {
+      if (result.gemini_api_key) {
+        input.value = result.gemini_api_key;
+        showStatus('API key loaded.', 'success');
+      }
+    });
+
+    // Show/hide toggle
+    toggle.addEventListener('click', () => {
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      toggle.textContent = isPassword ? 'Hide key' : 'Show key';
+    });
+
+    // Save
+    document.getElementById('save-btn').addEventListener('click', () => {
+      const key = input.value.trim();
+      if (!key) {
+        showStatus('Please enter an API key.', 'error');
+        return;
+      }
+      chrome.storage.local.set({ gemini_api_key: key }, () => {
+        showStatus('API key saved successfully.', 'success');
+      });
+    });
+
+    // Clear
+    document.getElementById('clear-btn').addEventListener('click', () => {
+      chrome.storage.local.remove(['gemini_api_key'], () => {
+        input.value = '';
+        showStatus('API key removed.', 'success');
+      });
+    });
+
+    function showStatus(msg, type) {
+      status.textContent = msg;
+      status.className = 'status ' + type;
+    }
+  </script>
+</body>
+</html>
